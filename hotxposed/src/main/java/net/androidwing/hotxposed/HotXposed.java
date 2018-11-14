@@ -7,6 +7,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import java.io.File;
+import java.lang.reflect.Method;
 
 /**
  * Created  on 2018/3/30.
@@ -27,8 +28,12 @@ public class HotXposed {
     PathClassLoader classLoader =
         new PathClassLoader(apkFile.getAbsolutePath(), lpparam.getClass().getClassLoader());
 
-    XposedHelpers.callMethod(classLoader.loadClass(clazz.getName()).newInstance(), "dispatch",lpparam);
-
+    Class cls = classLoader.loadClass(clazz.getName());
+    if (cls != null) {
+      Method method = cls.getDeclaredMethod("dispatch", XC_LoadPackage.LoadPackageParam.class);
+      method.setAccessible(true);
+      method.invoke(cls.newInstance(), lpparam);
+    }
   }
 
   private static void filterNotify(XC_LoadPackage.LoadPackageParam lpparam)
